@@ -1,0 +1,52 @@
+version: '3'
+services:
+  db:
+    image: mariadb:latest
+    container_name: readhub
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # 루트 비밀번호 설정
+    ports:
+      - "127.0.0.1:3307:3307"  # 외부 포트 3307을 내부 포트 3306에 매핑
+    volumes:
+      - ./data:/var/lib/mysql  # 데이터가 로컬에 저장되도록 설정
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+   
+ 
+  
+  
+      
+
+
+
+
+
+
+
