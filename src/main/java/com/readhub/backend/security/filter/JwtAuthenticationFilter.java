@@ -3,7 +3,7 @@ package com.readhub.backend.security.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readhub.backend.security.dto.LoginRequestDto;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
-import com.readhub.backend.user.User;
+import com.readhub.backend.user.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

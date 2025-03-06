@@ -1,6 +1,6 @@
 package com.readhub.backend.security.jwt;
 
-import com.readhub.backend.user.User;
+import com.readhub.backend.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

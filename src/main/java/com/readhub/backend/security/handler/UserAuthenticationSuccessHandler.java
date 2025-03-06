@@ -2,7 +2,7 @@ package com.readhub.backend.security.handler;
 
 import com.google.gson.Gson;
 import com.readhub.backend.security.dto.LoginResponseDto;
-import com.readhub.backend.user.User;
+import com.readhub.backend.user.entity.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

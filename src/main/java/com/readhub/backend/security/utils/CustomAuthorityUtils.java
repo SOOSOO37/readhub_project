@@ -1,6 +1,6 @@
 package com.readhub.backend.security.utils;
 
-import com.readhub.backend.user.User;
+import com.readhub.backend.user.entity.User;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
