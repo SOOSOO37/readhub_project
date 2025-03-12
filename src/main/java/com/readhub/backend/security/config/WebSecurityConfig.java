@@ -7,6 +7,7 @@ import com.readhub.backend.security.handler.UserAuthenticationEntryPoint;
 import com.readhub.backend.security.handler.UserAuthenticationFailureHandler;
 import com.readhub.backend.security.handler.UserAuthenticationSuccessHandler;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
+import com.readhub.backend.security.service.OauthService;
 import com.readhub.backend.security.userdetail.CustomUserDetailsService;
 import com.readhub.backend.security.utils.CustomAuthorityUtils;
 import lombok.Getter;
@@ -23,7 +24,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,7 +45,6 @@ public class WebSecurityConfig {
     private final CustomAuthorityUtils authorityUtils;
 
     private final CustomUserDetailsService userDetailsService;
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -66,7 +68,9 @@ public class WebSecurityConfig {
                 .addFilterAfter(new JwtVerificationFilter(jwtTokenProvider, authorityUtils, userDetailsService),
                         JwtAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
+                        .anyRequest().permitAll())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/authorization/kakao")
                 );
 
         return http.build();
@@ -75,6 +79,16 @@ public class WebSecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public DefaultOAuth2UserService defaultOAuth2UserService() {
+        return new DefaultOAuth2UserService();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
     @Bean

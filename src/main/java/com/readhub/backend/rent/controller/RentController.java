@@ -24,6 +24,7 @@ public class RentController {
 
     private final RentMapper mapper;
 
+
     private final RentService service;
 
     @PostMapping

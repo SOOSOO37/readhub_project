@@ -3,9 +3,7 @@ package com.readhub.backend.user.entity;
 import com.readhub.backend.global.audit.Auditable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -16,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Setter
 @Getter
@@ -29,6 +29,8 @@ public class User extends Auditable implements Principal{
     @Email
     @Column(nullable = false, unique = true, updatable = false)
     private String email;
+
+    private String gender;
 
     @Column(nullable = false)
     private String password;
@@ -44,6 +46,7 @@ public class User extends Auditable implements Principal{
     @Fetch(value = FetchMode.SUBSELECT)
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
+
 
     public enum UserStatus {
         ACTIVE(1, "활동중"),
@@ -77,4 +80,5 @@ public class User extends Auditable implements Principal{
     public Map.Entry<Object, Object> getRole() {
         return null;
     }
+
 }

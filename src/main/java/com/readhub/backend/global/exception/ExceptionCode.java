@@ -10,6 +10,8 @@ public enum ExceptionCode {
 
     USER_QUIT(404, "탈퇴한 회원입니다."),
 
+    PERMISSION_NOT_EXIST(409, "허가되지 않은 접근입니다."),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 

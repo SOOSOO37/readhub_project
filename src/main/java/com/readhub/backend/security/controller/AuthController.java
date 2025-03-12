@@ -1,13 +1,16 @@
 package com.readhub.backend.security.controller;
 
-import com.readhub.backend.security.service.OAuthService;
+import com.readhub.backend.security.dto.Oauth;
+import com.readhub.backend.security.dto.Token;
+import com.readhub.backend.security.service.OauthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -15,11 +18,18 @@ import java.util.Map;
 @RequestMapping("/auth/kakao")
 public class AuthController {
 
-    private final OAuthService oAuthService;
+    private final OauthService oAuthService;
 
-    @GetMapping("/redirect")
-    public ResponseEntity<Map<String, String>> kakaoLogin(@RequestParam String code) {
-        Map<String, String> tokens = oAuthService.loginKakao(code);
-        return ResponseEntity.ok(tokens);
+    @PostMapping("/login")
+    public ResponseEntity<Void> oauth(@RequestBody @Valid Oauth oAuth) {
+        Token token = oAuthService.login(oAuth.getProvider(), oAuth.getCode());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token.getAccessToken());
+        headers.add("Refresh", "Bearer " + token.getRefreshToken());
+        headers.add("userId", String.valueOf(token.getId()));
+
+        return ResponseEntity.ok().headers(headers).build();
     }
+
 }
