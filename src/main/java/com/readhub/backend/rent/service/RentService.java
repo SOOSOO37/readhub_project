@@ -2,6 +2,8 @@ package com.readhub.backend.rent.service;
 
 import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.book.repository.BookRepository;
+import com.readhub.backend.global.exception.BusinessLogicException;
+import com.readhub.backend.global.exception.ExceptionCode;
 import com.readhub.backend.rent.entity.Rent;
 import com.readhub.backend.rent.repository.RentRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,7 @@ public class RentService {
 
         Book book = rent.getBook();
         if (book.getRentCount() <= 0) {
-            throw new IllegalStateException("대출 가능한 도서가 없습니다.");
+            throw new BusinessLogicException(ExceptionCode.BOOK_NOT_FOUND);
         }
 
         rent.setDueDate(LocalDate.now().plusDays(7));

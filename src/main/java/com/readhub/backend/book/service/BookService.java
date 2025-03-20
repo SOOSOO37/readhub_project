@@ -2,6 +2,8 @@ package com.readhub.backend.book.service;
 
 import com.readhub.backend.book.repository.BookRepository;
 import com.readhub.backend.book.entity.Book;
+import com.readhub.backend.global.exception.BusinessLogicException;
+import com.readhub.backend.global.exception.ExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -50,7 +52,7 @@ public class BookService {
         Optional<Book> optionalBooks = bookRepository.findById(bookId);
         Book findBook =
                 optionalBooks.orElseThrow(() ->
-                        new RuntimeException("Not Found"));
+                        new BusinessLogicException(ExceptionCode.BOOK_NOT_FOUND));
         return findBook;
     }
 }

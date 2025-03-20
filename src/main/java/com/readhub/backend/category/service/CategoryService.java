@@ -2,6 +2,8 @@ package com.readhub.backend.category.service;
 
 import com.readhub.backend.category.entity.Category;
 import com.readhub.backend.category.repository.CategoryRepository;
+import com.readhub.backend.global.exception.BusinessLogicException;
+import com.readhub.backend.global.exception.ExceptionCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +20,7 @@ public class CategoryService {
 
     public Category createCategory(Category category){
         if (isCategoryNameExists(category.getName())) {
-            throw new RuntimeException("이미 존재하는 카테고리 입니다");
+            throw new BusinessLogicException(ExceptionCode.CATEGORY_EXISTS);
         }
         Category savedCategory = categoryRepository.save(category);
         return savedCategory;

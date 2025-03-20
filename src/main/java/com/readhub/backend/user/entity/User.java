@@ -38,6 +38,7 @@ public class User extends Auditable implements Principal{
     @Column(nullable = false, unique = true)
     private String nickName;
 
+    @Builder.Default
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserStatus userStatus = UserStatus.ACTIVE;

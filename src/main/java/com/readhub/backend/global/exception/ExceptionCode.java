@@ -4,9 +4,15 @@ import lombok.Getter;
 
 public enum ExceptionCode {
 
-    USER_NICKNAME_EXISTS(409, "이미 등록된 닉네임입니다."),
+    USER_NICKNAME_EXISTS(409, "이미 등록된 닉네임 입니다."),
+
+    USER_EMAIL_EXISTS(409, "이미 등록된 이메일 입니다."),
 
     USER_NOT_FOUND(404, "존재하지 않는 회원입니다."),
+
+    BOOK_NOT_FOUND(404,"대출할 수없는 도서입니다."),
+
+    CATEGORY_EXISTS(409, "이미 등록된 카테고리 입니다."),
 
     USER_QUIT(404, "탈퇴한 회원입니다."),
 
