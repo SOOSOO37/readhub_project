@@ -13,6 +13,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -23,14 +24,19 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         Exception exception = (Exception) request.getAttribute("exception");
 
-        ErrorResponder.sendErrorResponse(response, HttpStatus.UNAUTHORIZED, exception.getMessage());
+        String errorMessage = (exception != null) ? "Unauthorized access attempt detected." : "Authentication failed.";
+
+        ErrorResponder.sendErrorResponse(response, HttpStatus.UNAUTHORIZED, errorMessage);
 
         logExceptionMessage(authException, exception);
-
     }
 
     private void logExceptionMessage(AuthenticationException authException, Exception exception) {
-        String message = exception != null ? exception.getMessage() : authException.getMessage();
-        log.warn("Unauthorized error happened: {}", message);
+        String message = Optional.ofNullable(exception)
+                .map(Exception::getMessage)
+                .orElse(authException.getMessage());
+        log.info("Unauthorized access attempt: {}", message);
     }
 }
+
+

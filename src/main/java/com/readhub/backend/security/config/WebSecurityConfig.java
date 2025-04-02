@@ -26,6 +26,8 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -37,13 +39,12 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
+
     @Getter
     @Value("${config.domain}")
     private String domain;
     private final JwtTokenProvider jwtTokenProvider;
-
     private final CustomAuthorityUtils authorityUtils;
-
     private final CustomUserDetailsService userDetailsService;
 
     @Bean
@@ -55,25 +56,30 @@ public class WebSecurityConfig {
                 )
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .with(new CustomFilterConfigurer(), CustomFilterConfigurer::build)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new UserAuthenticationEntryPoint())
                         .accessDeniedHandler(new UserAccessDeniedHandler())
                 )
-                .addFilter(new JwtAuthenticationFilter(authenticationManager(http), jwtTokenProvider))
-                .addFilterAfter(new JwtVerificationFilter(jwtTokenProvider, authorityUtils, userDetailsService),
-                        JwtAuthenticationFilter.class)
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/**").hasRole("USER")
+                        .anyRequest().authenticated()
+                )
+
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/oauth2/authorization/kakao")
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManager.class);
     }
 
     @Bean
@@ -105,27 +111,28 @@ public class WebSecurityConfig {
         return source;
     }
 
-    public class CustomFilterConfigurer extends AbstractHttpConfigurer<CustomFilterConfigurer,HttpSecurity> {
+public class CustomFilterConfigurer extends AbstractHttpConfigurer<CustomFilterConfigurer, HttpSecurity> {
+    @CrossOrigin
+    @Override
+    public void configure(HttpSecurity builder) throws Exception {
+        AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
 
-        @Override
-        public void configure(HttpSecurity builder) throws Exception {
-            AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenProvider);
+        jwtAuthenticationFilter.setFilterProcessesUrl("/users/login");
+        jwtAuthenticationFilter.setAuthenticationSuccessHandler(new UserAuthenticationSuccessHandler());
+        jwtAuthenticationFilter.setAuthenticationFailureHandler(new UserAuthenticationFailureHandler());
 
-            JwtAuthenticationFilter jwtAuthenticationFilter =
-                    new JwtAuthenticationFilter(authenticationManager,jwtTokenProvider);
-            jwtAuthenticationFilter.setFilterProcessesUrl("/users/login");
-            jwtAuthenticationFilter.setAuthenticationSuccessHandler(new UserAuthenticationSuccessHandler());
-            jwtAuthenticationFilter.setAuthenticationFailureHandler(new UserAuthenticationFailureHandler());
+        JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenProvider, authorityUtils, userDetailsService);
 
-            JwtVerificationFilter jwtVerificationFilter =
-                    new JwtVerificationFilter(jwtTokenProvider, authorityUtils,userDetailsService);
+        builder.addFilter(jwtAuthenticationFilter)
+                .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class);
 
-            builder
-                    .addFilter(jwtAuthenticationFilter)
-                    .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class);
-        }
+
     }
-    private AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManager.class);
+    public HttpSecurity build(){
+        return getBuilder();
     }
+ }
 }
+
+

@@ -11,7 +11,9 @@ import com.readhub.backend.security.utils.OauthProvider;
 import com.readhub.backend.user.entity.User;
 import com.readhub.backend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -35,6 +37,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OauthService {
     private final InMemoryClientRegistrationRepository inMemoryRepository;
     private final UserRepository userRepository;
@@ -43,31 +46,23 @@ public class OauthService {
     private final RestTemplate restTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-
     @Transactional
     public Token login(OauthProvider provider, String code) {
 
         String registrationId = provider.getDescription();
-
         ClientRegistration clientRegistration = inMemoryRepository.findByRegistrationId(registrationId);
 
         String token = getToken(code, clientRegistration);
-
         OAuth2User oAuth2User = getOAuth2User(token, clientRegistration);
 
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
-
         UserProfile userProfile = OauthProvider.extract(registrationId, attributes);
 
         User user = getOrSaveUser(userProfile);
-
-        Token jwtToken = createToken(user);
-
-        return jwtToken;
+        return createToken(user);
     }
 
     public String getToken(String code, ClientRegistration clientRegistration) {
-
         String uri = clientRegistration.getProviderDetails().getTokenUri();
 
         HttpHeaders headers = new HttpHeaders();
@@ -82,30 +77,33 @@ public class OauthService {
                     uri,
                     HttpMethod.POST,
                     entity,
-                    new ParameterizedTypeReference<>(){}
+                    new ParameterizedTypeReference<>() {}
             );
+
+            if (responseEntity.getBody() == null || !responseEntity.getBody().containsKey("access_token")) {
+                log.error("OAuth token response is null or missing access_token: {}", responseEntity.getBody());
+                throw new BusinessLogicException(ExceptionCode.PERMISSION_NOT_EXIST);
+            }
 
             return responseEntity.getBody().get("access_token");
         } catch (HttpClientErrorException.BadRequest e) {
+            log.error("OAuth token request failed: {}", e.getMessage());
             throw new BusinessLogicException(ExceptionCode.PERMISSION_NOT_EXIST);
         }
     }
 
     private OAuth2User getOAuth2User(String token, ClientRegistration clientRegistration) {
-
         OAuth2AccessTokenResponse tokenResponse = OAuth2AccessTokenResponse.withToken(token)
                 .tokenType(OAuth2AccessToken.TokenType.BEARER)
                 .expiresIn(3600L)
                 .build();
 
         OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, tokenResponse.getAccessToken());
-
         return defaultOAuth2UserService.loadUser(userRequest);
     }
 
     private MultiValueMap<String, String> tokenRequest(String code, ClientRegistration provider) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-
         formData.add("code", code);
         formData.add("grant_type", "authorization_code");
         formData.add("redirect_uri", provider.getRedirectUri());
@@ -115,19 +113,19 @@ public class OauthService {
 
     private User getOrSaveUser(UserProfile userProfile) {
         User user = getUser(userProfile);
-
-        if (user == null) {
-            user = saveUser(userProfile);
-        }
-        return user;
+        return (user == null) ? saveUser(userProfile) : user;
     }
 
-    private User getUser(UserProfile memberProfile) {
-        return userRepository.findByEmail(memberProfile.getEmail())
-                .orElse(null);
+    private User getUser(UserProfile userProfile) {
+        return userRepository.findByEmail(userProfile.getEmail()).orElse(null);
     }
 
     private User saveUser(UserProfile userProfile) {
+        if (userProfile.getEmail() == null || !userProfile.getEmail().contains("@")) {
+            log.error("Invalid email format: {}", userProfile.getEmail());
+            throw new IllegalArgumentException("Invalid email format.");
+        }
+
         User user = User.builder()
                 .email(userProfile.getEmail())
                 .password("oauthUser")
@@ -135,22 +133,24 @@ public class OauthService {
                 .gender(userProfile.getGender())
                 .build();
 
-        User signUser = userRepository.save(user);
-        return signUser;
+        return userRepository.save(user);
     }
 
     private Token createToken(User user) {
+        if (jwtTokenProvider.getSecretKey() == null) {
+            log.error("JWT secret key is not configured.");
+            throw new IllegalStateException("JWT secret key is not configured.");
+        }
+
         CustomUserDetails userDetails = new CustomUserDetails(
                 user.getId(),
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")
-                ));
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+        );
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
+                userDetails, null, userDetails.getAuthorities()
         );
 
         Map<String, Object> claims = new HashMap<>();
@@ -162,7 +162,7 @@ public class OauthService {
                 claims,
                 userDetails.getUsername(),
                 jwtTokenProvider.getTokenExpiration(jwtTokenProvider.getAccessTokenExpirationMinutes()),
-                jwtTokenProvider.encodeBase64SecretKey(jwtTokenProvider.getSecretKey()) // 기본 키 사용
+                jwtTokenProvider.encodeBase64SecretKey(jwtTokenProvider.getSecretKey())
         );
         String refreshToken = jwtTokenProvider.generateRefreshToken(
                 userDetails.getUsername(),
@@ -172,6 +172,4 @@ public class OauthService {
 
         return new Token(accessToken, refreshToken, user.getId());
     }
-
 }
-
