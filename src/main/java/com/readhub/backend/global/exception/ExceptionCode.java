@@ -18,6 +18,12 @@ public enum ExceptionCode {
 
     PERMISSION_NOT_EXIST(409, "허가되지 않은 접근입니다."),
 
+    INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
+
+    TOKEN_NOT_FOUND(404, "해당하는 토큰이 존재하지 않습니다."),
+
+    LOGOUT_AUTHORIZATION(401, "로그아웃 되었습니다."),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 

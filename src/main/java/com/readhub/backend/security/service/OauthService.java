@@ -5,16 +5,17 @@ import com.readhub.backend.global.exception.ExceptionCode;
 import com.readhub.backend.security.dto.Token;
 import com.readhub.backend.security.dto.UserProfile;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
+import com.readhub.backend.security.redis.entity.LogoutAccessToken;
+import com.readhub.backend.security.redis.entity.RefreshToken;
+import com.readhub.backend.security.redis.repository.LogoutAccessTokenRedisRepository;
+import com.readhub.backend.security.redis.repository.RefreshTokenRepository;
 import com.readhub.backend.security.userdetail.CustomUserDetails;
-import com.readhub.backend.security.userdetail.CustomUserDetailsService;
 import com.readhub.backend.security.utils.OauthProvider;
 import com.readhub.backend.user.entity.User;
 import com.readhub.backend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,10 +45,12 @@ public class OauthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final DefaultOAuth2UserService defaultOAuth2UserService;
     private final RestTemplate restTemplate;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public Token login(OauthProvider provider, String code) {
+        log.info("🔍 Received OAuth Code: {}", code);
 
         String registrationId = provider.getDescription();
         ClientRegistration clientRegistration = inMemoryRepository.findByRegistrationId(registrationId);
@@ -79,6 +82,7 @@ public class OauthService {
                     entity,
                     new ParameterizedTypeReference<>() {}
             );
+            log.info("🔍 OAuth Token Response: {}", responseEntity.getBody());
 
             if (responseEntity.getBody() == null || !responseEntity.getBody().containsKey("access_token")) {
                 log.error("OAuth token response is null or missing access_token: {}", responseEntity.getBody());
@@ -103,6 +107,7 @@ public class OauthService {
     }
 
     private MultiValueMap<String, String> tokenRequest(String code, ClientRegistration provider) {
+        log.info("🔍 Client ID: {}, Client Secret: {}", provider.getClientId(), provider.getClientSecret());
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("code", code);
         formData.add("grant_type", "authorization_code");
@@ -172,4 +177,46 @@ public class OauthService {
 
         return new Token(accessToken, refreshToken, user.getId());
     }
+    //로그아웃
+    public Map<String, String> reissue(String email, String refreshToken) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+
+        RefreshToken redisRefreshToken = refreshTokenRepository.findById(email)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.TOKEN_NOT_FOUND));
+
+        if (refreshToken.equals(redisRefreshToken.getRefreshToken())) {
+            Map<String, String> token = new HashMap<>();
+            token.put("accessToken", jwtTokenProvider.generateAccessToken(user));
+            token.put("refreshToken", jwtTokenProvider.generateRefreshToken(user.getEmail()));
+
+            redisRefreshToken.setRefreshToken(token.get("refreshToken"));
+            refreshTokenRepository.save(redisRefreshToken);
+
+            return token;
+        } else {
+            throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
+        }
+    }
+
+    public void logout(User user, String accessToken) {
+        String email = user.getEmail();
+        String jws = accessToken.replace("Bearer ", "");
+        Long expiration = jwtTokenProvider.getExpiration(jws);
+
+        LogoutAccessToken logoutAccessToken = LogoutAccessToken.of(jws, email, expiration);
+        logoutAccessTokenRedisRepository.save(logoutAccessToken);
+
+        deleteRefreshToken(email);
+    }
+
+    private void deleteRefreshToken(String email) {
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(email);
+
+        if (optionalRefreshToken.isPresent()) {
+            refreshTokenRepository.deleteById(email);
+        }
+    }
+
 }

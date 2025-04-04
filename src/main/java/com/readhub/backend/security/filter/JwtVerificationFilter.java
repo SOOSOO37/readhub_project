@@ -1,6 +1,10 @@
 package com.readhub.backend.security.filter;
 
+import com.readhub.backend.global.exception.BusinessLogicException;
+import com.readhub.backend.global.exception.ExceptionCode;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
+import com.readhub.backend.security.redis.entity.LogoutAccessToken;
+import com.readhub.backend.security.redis.repository.LogoutAccessTokenRedisRepository;
 import com.readhub.backend.security.userdetail.CustomUserDetailsService;
 import com.readhub.backend.security.utils.CustomAuthorityUtils;
 import com.readhub.backend.security.utils.UserResignedException;
@@ -21,6 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class JwtVerificationFilter extends OncePerRequestFilter {
@@ -30,6 +35,8 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     private final CustomAuthorityUtils authorityUtils;
 
     private final CustomUserDetailsService userDetailsService;
+
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -60,6 +67,8 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     private Map<String,Object> verifyJws(HttpServletRequest request) {
         String jws = request.getHeader("Authorization").replace("Bearer ", "");
 
+        checkBlackList(jws);
+
         String base64SecretKey = jwtTokenProvider.encodeBase64SecretKey(jwtTokenProvider.getSecretKey());
         Map<String,Object> claims = jwtTokenProvider.getClaims(jws, base64SecretKey).getBody();
 
@@ -84,5 +93,11 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     private boolean isValidAuthorization(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         return authorization == null || !authorization.startsWith("Bearer");
+    }
+
+    private void checkBlackList(String jws) {
+        Optional<LogoutAccessToken> optionalLogoutAccessToken = logoutAccessTokenRedisRepository.findById(jws);
+        if (optionalLogoutAccessToken.isPresent())
+            throw new BusinessLogicException(ExceptionCode.LOGOUT_AUTHORIZATION);
     }
 }

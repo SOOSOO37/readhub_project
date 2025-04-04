@@ -137,4 +137,14 @@ public class JwtTokenProvider {
         return key;
     }
 
+    public Long getExpiration(String jws) {
+        String base64EncodedSecretKey = encodeBase64SecretKey(secretKey);
+        Jws<Claims> claims = getClaims(jws, base64EncodedSecretKey);
+
+        Date expiration = claims.getBody().getExpiration();
+
+        Long now = new Date().getTime();
+        return (expiration.getTime() - now);
+    }
+
 }

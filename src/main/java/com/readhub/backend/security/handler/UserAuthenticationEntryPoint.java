@@ -19,23 +19,20 @@ import java.util.Optional;
 @Component
 public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-
         Exception exception = (Exception) request.getAttribute("exception");
 
-        String errorMessage = (exception != null) ? "Unauthorized access attempt detected." : "Authentication failed.";
-
-        ErrorResponder.sendErrorResponse(response, HttpStatus.UNAUTHORIZED, errorMessage);
+        ErrorResponder.sendErrorResponse(response, HttpStatus.UNAUTHORIZED, exception.getMessage());
 
         logExceptionMessage(authException, exception);
+
     }
 
     private void logExceptionMessage(AuthenticationException authException, Exception exception) {
-        String message = Optional.ofNullable(exception)
-                .map(Exception::getMessage)
-                .orElse(authException.getMessage());
-        log.info("Unauthorized access attempt: {}", message);
+        String message = exception != null ? exception.getMessage() : authException.getMessage();
+        log.warn("Unauthorized error happened: {}", message);
     }
 }
 

@@ -3,6 +3,8 @@ package com.readhub.backend.security.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readhub.backend.security.dto.LoginRequestDto;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
+import com.readhub.backend.security.redis.entity.RefreshToken;
+import com.readhub.backend.security.redis.repository.RefreshTokenRepository;
 import com.readhub.backend.user.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -27,6 +30,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final RefreshTokenRepository refreshTokenRepository;
+
     @SneakyThrows
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) {
@@ -38,6 +43,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
 
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        validateAccount(authentication);
 
         return authentication;
     }
@@ -56,6 +62,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             response.setHeader("Refresh", refreshToken);
 
             this.getSuccessHandler().onAuthenticationSuccess(request,response,authResult);
+
+            saveRedisRefreshToken(user, refreshToken);
         }
 
 
@@ -81,5 +89,17 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String refreshToken = jwtTokenProvider.generateRefreshToken(subject,expiration,base64SecretKey);
 
         return refreshToken;
+    }
+
+    private void validateAccount(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+
+        if (user.getUserStatus() == User.UserStatus.QUIT)
+            throw new DisabledException("User who has already resigned");
+    }
+
+    private void saveRedisRefreshToken(User user, String refreshToken) {
+        RefreshToken redisRefreshToken = new RefreshToken(user.getEmail(), refreshToken);
+        refreshTokenRepository.save(redisRefreshToken);
     }
 }

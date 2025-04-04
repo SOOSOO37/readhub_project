@@ -7,6 +7,8 @@ import com.readhub.backend.security.handler.UserAuthenticationEntryPoint;
 import com.readhub.backend.security.handler.UserAuthenticationFailureHandler;
 import com.readhub.backend.security.handler.UserAuthenticationSuccessHandler;
 import com.readhub.backend.security.jwt.JwtTokenProvider;
+import com.readhub.backend.security.redis.repository.LogoutAccessTokenRedisRepository;
+import com.readhub.backend.security.redis.repository.RefreshTokenRepository;
 import com.readhub.backend.security.service.OauthService;
 import com.readhub.backend.security.userdetail.CustomUserDetailsService;
 import com.readhub.backend.security.utils.CustomAuthorityUtils;
@@ -46,6 +48,8 @@ public class WebSecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomAuthorityUtils authorityUtils;
     private final CustomUserDetailsService userDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -56,7 +60,7 @@ public class WebSecurityConfig {
                 )
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .with(new CustomFilterConfigurer(), CustomFilterConfigurer::build)
@@ -66,12 +70,13 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/login").permitAll()
+                        .requestMatchers("/oauth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/kakao")
+                        .loginPage("/oauth")
                 );
 
         return http.build();
@@ -117,12 +122,13 @@ public class CustomFilterConfigurer extends AbstractHttpConfigurer<CustomFilterC
     public void configure(HttpSecurity builder) throws Exception {
         AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
 
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenProvider);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenProvider,refreshTokenRepository);
         jwtAuthenticationFilter.setFilterProcessesUrl("/users/login");
         jwtAuthenticationFilter.setAuthenticationSuccessHandler(new UserAuthenticationSuccessHandler());
         jwtAuthenticationFilter.setAuthenticationFailureHandler(new UserAuthenticationFailureHandler());
 
-        JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenProvider, authorityUtils, userDetailsService);
+        JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenProvider, authorityUtils,
+                userDetailsService,logoutAccessTokenRedisRepository);
 
         builder.addFilter(jwtAuthenticationFilter)
                 .addFilterAfter(jwtVerificationFilter, JwtAuthenticationFilter.class);
