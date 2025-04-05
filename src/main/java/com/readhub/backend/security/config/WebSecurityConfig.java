@@ -70,7 +70,11 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/login").permitAll()
+                        .requestMatchers("/admins/**").permitAll()
                         .requestMatchers("/oauth/**").permitAll()
+                        .requestMatchers("/users/**").permitAll()
+                        .requestMatchers("/books/**").permitAll()
+                        .requestMatchers("/rents/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )

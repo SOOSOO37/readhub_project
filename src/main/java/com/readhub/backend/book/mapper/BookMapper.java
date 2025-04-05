@@ -8,6 +8,7 @@ import com.readhub.backend.book.entity.Book;
 import org.mapstruct.Mapper;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface BookMapper {
@@ -16,7 +17,13 @@ public interface BookMapper {
     Book bookUpdateDtoToBook (BookUpdateDto bookUpdateDto);
     BookResponseDto bookToBookResponseDto(Book book);
     BookDetailResponseDto bookToBookDetailResponseDto(Book book);
-    List<BookResponseDto> booksToBookResponseDtos(List<Book> bookList);
+
+    default List<BookResponseDto> booksToBookResponseDtos(List<Book> books){
+        List<BookResponseDto> responses = books.stream()
+                .map(this::bookToBookResponseDto)
+                .collect(Collectors.toList());
+        return responses;
+    }
 
 
 }

@@ -1,13 +1,18 @@
 package com.readhub.backend.rent.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.global.audit.Auditable;
+import com.readhub.backend.rentbook.entity.RentBook;
+import com.readhub.backend.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -49,7 +54,11 @@ public class Rent extends Auditable {
         }
     }
 
+    @JsonBackReference
+    @OneToMany(mappedBy = "rent", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    private List<RentBook> rentBookList = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
-    private Book book;
+    @JoinColumn(name = "user_id")
+    private User user;
 }

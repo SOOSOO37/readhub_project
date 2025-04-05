@@ -1,11 +1,14 @@
 package com.readhub.backend.book.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.readhub.backend.global.audit.Auditable;
 import com.readhub.backend.rent.entity.Rent;
+import com.readhub.backend.rentbook.entity.RentBook;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Setter
@@ -73,7 +76,9 @@ public class Book extends Auditable {
             this.statusNumber = statusNumber;
         }
     }
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Rent> rents;
+
+    @JsonBackReference
+    @OneToMany(mappedBy = "book",cascade = CascadeType.REMOVE)
+    private List<RentBook> rentBookList = new ArrayList<>();
 
 }

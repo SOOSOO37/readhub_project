@@ -10,7 +10,11 @@ public enum ExceptionCode {
 
     USER_NOT_FOUND(404, "존재하지 않는 회원입니다."),
 
+    USER_STOP(404, "정지된 회원입니다."),
+
     BOOK_NOT_FOUND(404,"대출할 수없는 도서입니다."),
+
+    BOOK_NOT_AVAILABLE(404,"대출 가능한 권수가 없습니다"),
 
     CATEGORY_EXISTS(409, "이미 등록된 카테고리 입니다."),
 

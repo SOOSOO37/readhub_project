@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -46,7 +48,7 @@ public class BookController {
         return new ResponseEntity<>(updatedBook, HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/newest")
     public ResponseEntity getNewBooks(@RequestParam int page,
                                        @RequestParam int size){
         Page<Book> books = bookService.getNewBooks(page -1, size);
@@ -59,5 +61,20 @@ public class BookController {
     public ResponseEntity getBook(@PathVariable("id")long id){
         Book book = bookService.findBooK(id);
         return new ResponseEntity<>(mapper.bookToBookDetailResponseDto(book),HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity searchRecruitPosts( @RequestParam(defaultValue = "1") int page,
+                                              @RequestParam(defaultValue = "10") int size,
+                                              @RequestParam(defaultValue = "1") int sorting,
+                                              @RequestParam(required = false, defaultValue = "") String category,
+                                              @RequestParam(required = false, defaultValue = "") String keyword){
+
+        Page<Book> bookPage = bookService.searchRecruitPosts(page-1,size,sorting,category,keyword);
+        List<Book> books = bookPage.getContent();
+
+        return new ResponseEntity<>(
+                new MultiResponseDto<>(mapper.booksToBookResponseDtos(books),bookPage),
+                HttpStatus.OK);
     }
 }

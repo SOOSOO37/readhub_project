@@ -1,5 +1,6 @@
 package com.readhub.backend.user.entity;
 
+import com.readhub.backend.admin.entity.Admin;
 import com.readhub.backend.global.audit.Auditable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -47,6 +48,10 @@ public class User extends Auditable implements Principal{
     @Fetch(value = FetchMode.SUBSELECT)
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
 
 
     public enum UserStatus {
