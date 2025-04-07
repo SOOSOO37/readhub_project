@@ -1,11 +1,9 @@
 package com.readhub.backend.rent.dto;
 
 import com.readhub.backend.rent.entity.Rent;
-import com.readhub.backend.rentbook.dto.RentBookDto;
-import jakarta.validation.constraints.NotNull;
+import com.readhub.backend.rentbook.dto.RentBookCreateDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -22,6 +20,6 @@ public class RentCreateDto {
 
     private Rent.RentStatus rentStatus;
 
-    private List<RentBookDto> rentBookDtoList;
+    private List<RentBookCreateDto> rentBookDtoList;
 
 }

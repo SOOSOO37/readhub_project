@@ -76,6 +76,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/books/**").permitAll()
                         .requestMatchers("/rents/**").permitAll()
                         .requestMatchers("/categories/**").permitAll()
+                        .requestMatchers("/rent-books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )

@@ -1,6 +1,7 @@
 package com.readhub.backend.rent.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.global.audit.Auditable;
 import com.readhub.backend.rentbook.entity.RentBook;
@@ -59,7 +60,9 @@ public class Rent extends Auditable {
     @OneToMany(mappedBy = "rent", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private List<RentBook> rentBookList = new ArrayList<>();
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User user;
 }
