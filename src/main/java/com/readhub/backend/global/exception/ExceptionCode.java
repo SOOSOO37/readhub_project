@@ -16,7 +16,11 @@ public enum ExceptionCode {
 
     PAGE_NOT_FOUND(404,"접근할 수 없는 페이지 입니다."),
 
+    RENT_NOT_FOUND(404,"대출을 찾을 수 없습니다."),
+
     BOOK_NOT_AVAILABLE(404,"대출 가능한 권수가 없습니다"),
+
+    RETURN_NOT_AVAILABLE(404,"반납 가능한 도서가 아닙니다"),
 
     CATEGORY_EXISTS(409, "이미 등록된 카테고리 입니다."),
 

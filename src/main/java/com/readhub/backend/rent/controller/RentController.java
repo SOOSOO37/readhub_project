@@ -39,5 +39,38 @@ public class RentController {
 
         return ResponseEntity.created(location).build();
     }
+    //
+    @GetMapping
+    public ResponseEntity findAllRent(@RequestParam int page,
+                                       @RequestParam int size,
+                                       @AuthenticationPrincipal User user){
+
+        Page<Rent> rentPage = service.findAllRent(page-1, size,user);
+        List<Rent> rentList = rentPage.getContent();
+
+        return new ResponseEntity<>(new MultiResponseDto<>(mapper.rentsToRentResponseDtos(rentList),rentPage), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity findRent(@PathVariable long id,
+                                    @AuthenticationPrincipal User user) {
+        Rent rent = service.findRent(user,id);
+        return new ResponseEntity<>(mapper.rentToRentDetailResponseDto(rent), HttpStatus.OK);
+    }
+
+    @PatchMapping("/cancel/{id}")
+    public ResponseEntity cancelRent(@PathVariable long id,
+                                      @AuthenticationPrincipal User user){
+        Rent rent = service.cancelRent(user,id);
+        return new ResponseEntity<>(mapper.rentToRentResponseDto(rent),HttpStatus.OK);
+    }
+
+    @PatchMapping("/return/{id}")
+    public ResponseEntity returnRentBook(@PathVariable("id") long id,
+                                         @AuthenticationPrincipal User user) {
+
+        Rent rent = service.returnRentBook(user, id);
+        return new ResponseEntity<>(mapper.rentToRentResponseDto(rent), HttpStatus.OK);
+    }
 
 }

@@ -8,12 +8,18 @@ import java.util.List;
 
 @Getter
 @Setter
-public class RentResponseDto {
+public class RentDetailResponseDto {
 
     private long id;
-    private LocalDate createdAt;
+    private LocalDate dueDate;
+    private LocalDate returnDate;
+    private int extensionCount;
+    private String rentStatus;
 
-    private List<RentDetailResponseDto.RentedBookDto> rentedBooks;
+    private LocalDate createdAt;
+    private LocalDate modifiedAt;
+
+    private List<RentedBookDto> rentedBooks;
 
     @Getter
     @Setter
@@ -21,4 +27,3 @@ public class RentResponseDto {
         private String title;
     }
 }
-

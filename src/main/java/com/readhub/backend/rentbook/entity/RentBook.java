@@ -30,7 +30,7 @@ public class RentBook extends Auditable {
     private Book book;
 
     @Column(nullable = false)
-    private long quantity;
+    private int quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

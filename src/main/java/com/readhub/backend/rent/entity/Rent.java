@@ -40,7 +40,8 @@ public class Rent extends Auditable {
 
         RENT(1, "대출중"),
         RETURNED(2, "반납완료"),
-        OVERDUE(3, "연체");
+        OVERDUE(3, "연체"),
+        CANCEL(4, "대출취소");
 
         @Getter
         private int number;

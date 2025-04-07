@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -62,4 +63,78 @@ public class RentService {
                 .collect(Collectors.toList());
         return rentBookList;
     }
+
+    public Page<Rent> findAllRent (int page, int size, User user){
+
+        Page<Rent> rentPage = rentRepository.findByUser(user, PageRequest.of(page, size, Sort.by("id").descending()));
+        return rentPage;
+    }
+
+    public Rent findRent (User user,long id){
+        Rent findRent = findVerifiedRent(id);
+        verifyRentUser(id, user.getId());
+        return findRent;
+    }
+
+    public Rent cancelRent (User user,long rentId){
+        Rent findRent = findVerifiedRent(rentId);
+        verifyRentUser(rentId, user.getId());
+        findRent.setRentStatus(Rent.RentStatus.CANCEL);
+        Rent canceledRent = rentRepository.save(findRent);
+
+        return canceledRent;
+    }
+
+    public Rent returnRentBook(User user, long rentId) {
+        Rent rent = findVerifiedRent(rentId);
+        verifyRentUser(rentId, user.getId());
+
+        verifyReturn(rent);
+
+        rent.setReturnDate(LocalDate.now());
+        updateReturnStatus(rent);
+        increaseRentCount(rent);
+
+        return rentRepository.save(rent);
+    }
+
+    private void verifyReturn(Rent rent) {
+        if (rent.getRentStatus() == Rent.RentStatus.RETURNED) {
+            throw new BusinessLogicException(ExceptionCode.RETURN_NOT_AVAILABLE);
+        }
+    }
+
+    private void updateReturnStatus(Rent rent) {
+        if (rent.getDueDate().isBefore(LocalDate.now())) {
+            rent.setRentStatus(Rent.RentStatus.OVERDUE);
+        } else {
+            rent.setRentStatus(Rent.RentStatus.RETURNED);
+        }
+    }
+
+    private void increaseRentCount(Rent rent) {
+        for (RentBook rentBook : rent.getRentBookList()) {
+            Book book = rentBook.getBook();
+            book.setRentCount(book.getRentCount() + rentBook.getQuantity());
+        }
+    }
+
+    public Rent findVerifiedRent (long id){
+
+        Optional<Rent> findRent = rentRepository.findById(id);
+        Rent rent =
+                findRent.orElseThrow(() ->
+                        new BusinessLogicException(ExceptionCode.RENT_NOT_FOUND));
+        return rent;
+    }
+
+    public void verifyRentUser(long rentId, long userId){
+        Rent findRent = findVerifiedRent(rentId);
+        long dbUserId = findRent.getUser().getId();
+
+        if(userId != dbUserId){
+            throw new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
+        }
+    }
+
 }
