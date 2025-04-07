@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface RentRepository extends JpaRepository<Rent,Long> {
 
     Page<Rent> findByRentStatus(Rent.RentStatus rentStatus, Pageable pageable);
+
+    boolean existsByUserIdAndRentBookListBookId(Long userId, Long bookId);
 }
