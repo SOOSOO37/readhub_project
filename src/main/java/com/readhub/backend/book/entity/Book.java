@@ -42,6 +42,9 @@ public class Book extends Auditable {
     @Column
     private int likeCount;
 
+    @Column(nullable = false)
+    private int viewCount;
+
     @Column
     private int reviewCount;
 
@@ -61,6 +64,7 @@ public class Book extends Auditable {
     public enum BookStatus {
 
         AVAILABLE(1,"대여 가능"),
+        NOT_AVAILABLE(1,"대여  불 가능"),
         BORROWED(2,"대여 중"),
         RESERVED(3,"예약"),
         WAITING(4,"예약 대기");

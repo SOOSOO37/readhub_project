@@ -1,6 +1,7 @@
 package com.readhub.backend.book.controller;
 
 import com.readhub.backend.book.dto.BookCreateDto;
+import com.readhub.backend.book.dto.BookStatusUpdateDto;
 import com.readhub.backend.book.mapper.BookMapper;
 import com.readhub.backend.book.service.BookService;
 import com.readhub.backend.book.dto.BookUpdateDto;
@@ -59,22 +60,52 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity getBook(@PathVariable("id")long id){
-        Book book = bookService.findBooK(id);
+        Book book = bookService.findBook(id);
         return new ResponseEntity<>(mapper.bookToBookDetailResponseDto(book),HttpStatus.OK);
     }
 
     @GetMapping
-    public ResponseEntity searchRecruitPosts( @RequestParam(defaultValue = "1") int page,
+    public ResponseEntity searchBooks( @RequestParam(defaultValue = "1") int page,
                                               @RequestParam(defaultValue = "10") int size,
                                               @RequestParam(defaultValue = "1") int sorting,
                                               @RequestParam(required = false, defaultValue = "") String category,
                                               @RequestParam(required = false, defaultValue = "") String keyword){
 
-        Page<Book> bookPage = bookService.searchRecruitPosts(page-1,size,sorting,category,keyword);
+        Page<Book> bookPage = bookService.searchBooks(page-1,size,sorting,category,keyword);
         List<Book> books = bookPage.getContent();
 
         return new ResponseEntity<>(
                 new MultiResponseDto<>(mapper.booksToBookResponseDtos(books),bookPage),
                 HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteProduct(@PathVariable("id")long id){
+
+        bookService.deleteBook(id);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity updateStatus(@PathVariable("id")long id,
+                                       @RequestBody BookStatusUpdateDto bookStatusUpdateDto){
+
+        bookStatusUpdateDto.setId(id);
+        Book updateBook = bookService.updateBookStatus(id,mapper.bookStatusPatchDtoToBook(bookStatusUpdateDto));
+
+        return new ResponseEntity<>(mapper.bookToBookDetailResponseDto(updateBook), HttpStatus.OK);
+
+    }
+
+    @GetMapping("/ranking")
+    public ResponseEntity findRanking(@RequestParam int page,
+                                      @RequestParam int size){
+
+        Page<Book> books = bookService.findBookRanks(page -1, size);
+        List<Book> bookList = books.getContent();
+
+        return new ResponseEntity<>(new MultiResponseDto<>(mapper.booksToBookResponseDtos(bookList),books),HttpStatus.OK);
     }
 }

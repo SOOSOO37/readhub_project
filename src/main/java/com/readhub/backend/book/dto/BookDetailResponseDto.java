@@ -23,6 +23,8 @@ public class BookDetailResponseDto extends Auditable {
 
     private Book.BookStatus bookStatus;
 
+    private int viewCount;
+
     private int likeCount;
 
     private int reviewCount;

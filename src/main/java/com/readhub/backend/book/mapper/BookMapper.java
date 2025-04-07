@@ -1,9 +1,6 @@
 package com.readhub.backend.book.mapper;
 
-import com.readhub.backend.book.dto.BookCreateDto;
-import com.readhub.backend.book.dto.BookDetailResponseDto;
-import com.readhub.backend.book.dto.BookResponseDto;
-import com.readhub.backend.book.dto.BookUpdateDto;
+import com.readhub.backend.book.dto.*;
 import com.readhub.backend.book.entity.Book;
 import org.mapstruct.Mapper;
 
@@ -17,6 +14,7 @@ public interface BookMapper {
     Book bookUpdateDtoToBook (BookUpdateDto bookUpdateDto);
     BookResponseDto bookToBookResponseDto(Book book);
     BookDetailResponseDto bookToBookDetailResponseDto(Book book);
+    Book bookStatusPatchDtoToBook(BookStatusUpdateDto bookStatusUpdateDto);
 
     default List<BookResponseDto> booksToBookResponseDtos(List<Book> books){
         List<BookResponseDto> responses = books.stream()

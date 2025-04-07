@@ -43,13 +43,22 @@ public class BookService {
 
         return bookRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
-    
-    public Book findBooK (long bookId){
-        return findVerifiedBooks(bookId);
+
+    public Book findBook(long id){
+        Optional<Book> optionalBook = bookRepository.findById(id);
+
+        if(optionalBook.isPresent()){
+            Book book = optionalBook.get();
+            book.setViewCount(book.getViewCount()+1);
+            this.bookRepository.save(book);
+            return book;
+        }else {
+            throw new BusinessLogicException(ExceptionCode.BOOK_NOT_FOUND);
+        }
     }
 
     //
-    public Page<Book> searchRecruitPosts(int page, int size, int sorting, String category, String keyword){
+    public Page<Book> searchBooks(int page, int size, int sorting, String category, String keyword){
         List<Sort.Order> orders = sort.getOrders(sorting);
 
         if(category.isBlank() && keyword.isBlank()) {
@@ -60,6 +69,34 @@ public class BookService {
         return bookRepository.findByCategoryAndKeyword(PageRequest.of(page, size, Sort.by(orders)), category, keyword);
     }
 
+    public void deleteBook(long id){
+        Book findBook = findVerifiedBooks(id);
+
+        bookRepository.deleteById(findBook.getId());
+
+    }
+
+    public Book updateBookStatus(long id,Book book){
+        Book findBook = findVerifiedBooks(id);
+
+        changeBookStatus(findBook);
+
+        return bookRepository.save(findBook);
+
+    }
+
+    public Page<Book> findBookRanks(int page, int size){
+
+        return bookRepository.findAll(PageRequest.of(page,size, Sort.by("viewCount").descending()));
+
+    }
+
+    public void changeBookStatus(Book book) {
+
+        if (book.getRentCount() == 0) {
+            book.setBookStatus(Book.BookStatus.NOT_AVAILABLE);
+        }
+    }
     public Book findVerifiedBooks(long bookId) {
         Optional<Book> optionalBooks = bookRepository.findById(bookId);
         Book findBook =
@@ -67,6 +104,7 @@ public class BookService {
                         new BusinessLogicException(ExceptionCode.BOOK_NOT_FOUND));
         return findBook;
     }
+
 }
 
 
