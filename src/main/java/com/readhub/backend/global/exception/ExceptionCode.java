@@ -38,6 +38,12 @@ public enum ExceptionCode {
 
     RESERVATION_NOT_FOUND(404,"예약을 찾을 수 없습니다."),
 
+    REVIEW_NOT_FOUND(404,"리뷰를 찾을 수 없습니다."),
+
+    REVIEW_EXISTS(409, "이미 등록된 리뷰 입니다."),
+
+    REVIEW_REMOVED(403,"삭제된 리뷰 입니다."),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 
