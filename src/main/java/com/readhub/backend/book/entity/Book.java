@@ -5,6 +5,7 @@ import com.readhub.backend.bookpage.entity.BookPage;
 import com.readhub.backend.global.audit.Auditable;
 import com.readhub.backend.rent.entity.Rent;
 import com.readhub.backend.rentbook.entity.RentBook;
+import com.readhub.backend.reservation.entity.Reservation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -88,5 +89,8 @@ public class Book extends Auditable {
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private List<BookPage> pages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations = new ArrayList<>();
 
 }

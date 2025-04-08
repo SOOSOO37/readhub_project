@@ -34,6 +34,10 @@ public enum ExceptionCode {
 
     LOGOUT_AUTHORIZATION(401, "로그아웃 되었습니다."),
 
+    RESERVATION_NOT_ALLOWED(404,"예약이 허가 되지 않습니다."),
+
+    RESERVATION_NOT_FOUND(404,"예약을 찾을 수 없습니다."),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 

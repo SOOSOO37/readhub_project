@@ -2,6 +2,7 @@ package com.readhub.backend.user.entity;
 
 import com.readhub.backend.admin.entity.Admin;
 import com.readhub.backend.global.audit.Auditable;
+import com.readhub.backend.reservation.entity.Reservation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
@@ -52,6 +53,9 @@ public class User extends Auditable implements Principal{
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "admin_id")
     private Admin admin;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations = new ArrayList<>();
 
 
     public enum UserStatus {
