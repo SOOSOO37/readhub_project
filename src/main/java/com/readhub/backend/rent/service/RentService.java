@@ -37,6 +37,9 @@ public class RentService {
         if(user == null){
             throw new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
         }
+
+        LocalDate now = LocalDate.now();
+        rent.setDueDate(now.plusDays(14));
         List<RentBook> rentBookList = minusRentCount(rent);
         rent.setRentBookList(rentBookList);
 
@@ -120,10 +123,8 @@ public class RentService {
     }
 
     public Rent findVerifiedRent (long id){
-
         Optional<Rent> findRent = rentRepository.findById(id);
-        Rent rent =
-                findRent.orElseThrow(() ->
+        Rent rent = findRent.orElseThrow(() ->
                         new BusinessLogicException(ExceptionCode.RENT_NOT_FOUND));
         return rent;
     }

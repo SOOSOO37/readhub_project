@@ -44,6 +44,12 @@ public enum ExceptionCode {
 
     REVIEW_REMOVED(403,"삭제된 리뷰 입니다."),
 
+    RENTBOOK_NOT_FOUND(404,"대출한 책을 찾을 수 없습니다."),
+
+    ALREADY_EXTENDED(409,"이미 대출이 연장된 도서 입니다."),
+
+    OVERDUE_RENT(404,"대출이 연체 되었습니다"),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 
