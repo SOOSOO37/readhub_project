@@ -14,9 +14,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +30,9 @@ public class BookService {
     private final BookRepository bookRepository;
     private final Sorting sort;
     private final RentRepository rentRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String RECOMMEND_PREFIX = "recommend::user::";
 
     public Book createBook(Book book) {
         Book savedBook = bookRepository.save(book);
@@ -98,6 +103,35 @@ public class BookService {
         } else {
             return bookRepository.findAllByOrderByViewCountDesc(pageable);
         }
+    }
+
+    public Page<Book> findRedisRecommendedBooks(User user, int page, int size) {
+        String redisKey = RECOMMEND_PREFIX + user.getId();
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Book> cached = (Page<Book>) redisTemplate.opsForValue().get(redisKey);
+        if (cached != null) {
+            return cached;
+        }
+
+        Optional<Book> recentBook = rentRepository.findRecentRentedBookByUserId(user.getId());
+        Page<Book> recommendedBooks;
+
+        if (recentBook.isPresent()) {
+            Book recBook = recentBook.get();
+
+            recommendedBooks = bookRepository.findByWriterOrKeywordWeighted(
+                    recBook.getWriter(),
+                    recBook.getKeyword(),
+                    recBook.getId(),
+                    pageable
+            );
+        } else {
+            recommendedBooks = bookRepository.findAllByViewCountDesc(pageable);
+        }
+
+        redisTemplate.opsForValue().set(redisKey, recommendedBooks, Duration.ofHours(3));
+        return recommendedBooks;
     }
 
 

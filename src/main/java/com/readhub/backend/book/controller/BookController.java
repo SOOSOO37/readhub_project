@@ -119,4 +119,15 @@ public class BookController {
 
         return new ResponseEntity<>(new MultiResponseDto<>(mapper.booksToRecommendationDtos(bookList), books), HttpStatus.OK);
     }
+
+    @GetMapping("/redis")
+    public ResponseEntity getRecommendedBooks(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int size,
+                                              @AuthenticationPrincipal User user){
+
+        Page<Book> recommendedBooks = bookService.findRedisRecommendedBooks(user, page, size);
+        List<Book> response = recommendedBooks.getContent();
+
+        return new ResponseEntity<>(new MultiResponseDto<>(mapper.booksToRecommendationDtos(response), recommendedBooks), HttpStatus.OK);
+    }
 }

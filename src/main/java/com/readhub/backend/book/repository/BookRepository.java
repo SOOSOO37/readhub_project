@@ -1,6 +1,7 @@
 package com.readhub.backend.book.repository;
 
 import com.readhub.backend.book.entity.Book;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,24 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Page<Book> findByCategoryOrderByViewCountDesc(String category, Pageable pageable);
 
     Page<Book> findAllByOrderByViewCountDesc(Pageable pageable);
+
+    @Query("SELECT b FROM Book b " +
+            "WHERE b.id <> :excludeId AND " +
+            "(LOWER(b.writer) = LOWER(:writer) OR LOWER(b.keyword) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "ORDER BY " +
+            "CASE " +
+            "WHEN LOWER(b.writer) = LOWER(:writer) AND LOWER(b.keyword) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1 " +
+            "WHEN LOWER(b.writer) = LOWER(:writer) THEN 2 " +
+            "WHEN LOWER(b.keyword) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 3 " +
+            "ELSE 4 END, " +
+            "b.viewCount DESC")
+    Page<Book> findByWriterOrKeywordWeighted(@Param("writer") String writer,
+                                             @Param("keyword") String keyword,
+                                             @Param("excludeId") Long excludeId,
+                                             Pageable pageable);
+
+    @Query("SELECT b FROM Book b ORDER BY b.viewCount DESC")
+    Page<Book> findAllByViewCountDesc(Pageable pageable);
 
 
 }
