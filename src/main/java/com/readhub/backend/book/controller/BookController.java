@@ -8,6 +8,7 @@ import com.readhub.backend.book.dto.BookUpdateDto;
 import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.global.response.MultiResponseDto;
 import com.readhub.backend.global.utils.UriCreator;
+import com.readhub.backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -107,5 +108,15 @@ public class BookController {
         List<Book> bookList = books.getContent();
 
         return new ResponseEntity<>(new MultiResponseDto<>(mapper.booksToBookResponseDtos(bookList),books),HttpStatus.OK);
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity findRecommendedBooks(@RequestParam int page,
+                                               @RequestParam int size,
+                                               @AuthenticationPrincipal User user) {
+        Page<Book> books = bookService.findRecommendedBooks(user, page -1, size);
+        List<Book> bookList = books.getContent();
+
+        return new ResponseEntity<>(new MultiResponseDto<>(mapper.booksToRecommendationDtos(bookList), books), HttpStatus.OK);
     }
 }

@@ -17,4 +17,9 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     @Query("select p from Book p where p.category=:category and (p.writer like %:keyword% or p.title like %:keyword%)")
     Page<Book> findByCategoryAndKeyword(Pageable pageable, String category, String keyword);
 
+    Page<Book> findByCategoryOrderByViewCountDesc(String category, Pageable pageable);
+
+    Page<Book> findAllByOrderByViewCountDesc(Pageable pageable);
+
+
 }

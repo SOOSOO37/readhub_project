@@ -23,5 +23,17 @@ public interface BookMapper {
         return responses;
     }
 
+    default List<BookRecommendDto> booksToRecommendationDtos(List<Book> books) {
+        return books.stream()
+                .map(book -> BookRecommendDto.builder()
+                        .id(book.getId())
+                        .title(book.getTitle())
+                        .writer(book.getWriter())
+                        .category(book.getCategory())
+                        .viewCount(book.getViewCount())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 
 }

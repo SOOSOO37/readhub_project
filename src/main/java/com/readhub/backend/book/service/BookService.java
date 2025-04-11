@@ -5,6 +5,8 @@ import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.global.exception.BusinessLogicException;
 import com.readhub.backend.global.exception.ExceptionCode;
 import com.readhub.backend.global.utils.Sorting;
+import com.readhub.backend.rent.repository.RentRepository;
+import com.readhub.backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -25,6 +27,7 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final Sorting sort;
+    private final RentRepository rentRepository;
 
     public Book createBook(Book book) {
         Book savedBook = bookRepository.save(book);
@@ -84,6 +87,19 @@ public class BookService {
         return bookRepository.save(findBook);
 
     }
+
+    public Page<Book> findRecommendedBooks(User user, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Optional<Book> recentBook = rentRepository.findRecentRentedBookByUserId(user.getId());
+
+        if (recentBook.isPresent()) {
+            String category = recentBook.get().getCategory();
+            return bookRepository.findByCategoryOrderByViewCountDesc(category, pageable);
+        } else {
+            return bookRepository.findAllByOrderByViewCountDesc(pageable);
+        }
+    }
+
 
     public Page<Book> findBookRanks(int page, int size){
 

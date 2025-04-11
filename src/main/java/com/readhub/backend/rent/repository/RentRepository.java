@@ -1,11 +1,16 @@
 package com.readhub.backend.rent.repository;
 
+import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.rent.entity.Rent;
 import com.readhub.backend.user.entity.User;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 public interface RentRepository extends JpaRepository<Rent,Long> {
@@ -15,4 +20,7 @@ public interface RentRepository extends JpaRepository<Rent,Long> {
     boolean existsByUserIdAndRentBookListBookId(Long userId, Long bookId);
 
     Page<Rent> findByUser(User user, Pageable pageable);
+
+    @Query("SELECT rb.book FROM RentBook rb " + "JOIN rb.rent r " + "WHERE r.user.id = :userId " + "ORDER BY r.createdAt DESC")
+    Optional<Book> findRecentRentedBookByUserId(@Param("userId") Long userId);
 }

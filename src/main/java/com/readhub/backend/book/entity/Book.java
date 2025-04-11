@@ -62,6 +62,9 @@ public class Book extends Auditable {
     @Column
     private String writerInfo;
 
+    @Column
+    private String keyword;
+
 
     public enum BookStatus {
 
