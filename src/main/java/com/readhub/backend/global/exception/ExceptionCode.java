@@ -50,6 +50,10 @@ public enum ExceptionCode {
 
     OVERDUE_RENT(404,"대출이 연체 되었습니다"),
 
+    FAVORITE_NOT_FOUND(404,"찜한 도서를 찾을 수 없습니다."),
+
+    ALREADY_FAVORITE(404,"이미 찜한 게시물 입니다."),
+
     SLEEPER_ACCOUNT(404, "휴면계정 입니다.");
 
 

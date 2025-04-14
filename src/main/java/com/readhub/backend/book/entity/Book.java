@@ -2,6 +2,7 @@ package com.readhub.backend.book.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.readhub.backend.bookpage.entity.BookPage;
+import com.readhub.backend.favorite.entity.Favorite;
 import com.readhub.backend.global.audit.Auditable;
 import com.readhub.backend.rent.entity.Rent;
 import com.readhub.backend.rentbook.entity.RentBook;
@@ -95,5 +96,18 @@ public class Book extends Auditable {
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.REMOVE)
+    private List<Favorite> favorites = new ArrayList<>();
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 
 }

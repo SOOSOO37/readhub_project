@@ -1,6 +1,7 @@
 package com.readhub.backend.user.entity;
 
 import com.readhub.backend.admin.entity.Admin;
+import com.readhub.backend.favorite.entity.Favorite;
 import com.readhub.backend.global.audit.Auditable;
 import com.readhub.backend.reservation.entity.Reservation;
 import jakarta.persistence.*;
@@ -56,6 +57,9 @@ public class User extends Auditable implements Principal{
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Favorite> favorites = new ArrayList<>();
 
 
     public enum UserStatus {
