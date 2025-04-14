@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,4 +25,8 @@ public interface RentRepository extends JpaRepository<Rent,Long> {
 
     @Query("SELECT rb.book FROM RentBook rb " + "JOIN rb.rent r " + "WHERE r.user.id = :userId " + "ORDER BY r.createdAt DESC")
     Optional<Book> findRecentRentedBookByUserId(@Param("userId") Long userId);
+
+    List<Rent> findByDueDateAndRentStatus(LocalDate dueDate, Rent.RentStatus rentStatus);
+
+    List<Rent> findByDueDateBeforeAndRentStatus(LocalDate today, Rent.RentStatus rentStatus);
 }

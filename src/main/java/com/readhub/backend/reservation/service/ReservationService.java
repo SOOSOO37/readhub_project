@@ -5,6 +5,8 @@ import com.readhub.backend.book.entity.Book;
 import com.readhub.backend.book.repository.BookRepository;
 import com.readhub.backend.global.exception.BusinessLogicException;
 import com.readhub.backend.global.exception.ExceptionCode;
+import com.readhub.backend.notification.entity.Notification;
+import com.readhub.backend.notification.service.NotificationService;
 import com.readhub.backend.reservation.entity.Reservation;
 import com.readhub.backend.reservation.repository.ReservationRepository;
 import com.readhub.backend.user.entity.User;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -24,6 +27,7 @@ public class ReservationService {
     private final BookRepository bookRepository;
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public Reservation createReservation(Reservation reservation, User user) {
 
@@ -82,6 +86,29 @@ public class ReservationService {
         if(userId != dbUserId){
             throw new BusinessLogicException(ExceptionCode.USER_NOT_FOUND);
         }
+    }
+
+    public void notifyAvailableToRent(Book book) {
+        List<Reservation> waitingList = reservationRepository.findByBookAndReservationStatusOrderByReservedAtAsc(
+                book, Reservation.ReservationStatus.WAITING
+        );
+        if (waitingList.isEmpty()) return;
+
+        Reservation reservation = waitingList.get(0);
+        User user = reservation.getUser();
+
+        String content = "'" + book.getTitle() + "' 도서가 대여 가능해졌습니다.";
+        String url = "/books/" + book.getId();
+
+        notificationService.send(
+                user,
+                Notification.NotificationType.AVAILABLE_TO_RENT,
+                content,
+                url
+        );
+
+        reservation.setReservationStatus(Reservation.ReservationStatus.COMPLETED);
+        reservationRepository.save(reservation);
     }
 
 }

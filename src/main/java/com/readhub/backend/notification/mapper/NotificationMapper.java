@@ -5,9 +5,7 @@ import com.readhub.backend.notification.entity.Notification;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface NotificationMapper {
-
-    NotificationMapper NOTIFICATION_MAPPER = Mappers.getMapper(NotificationMapper.class);
     NotificationResponseDto NotificationToNotificationResponseDto(Notification notification);
 }

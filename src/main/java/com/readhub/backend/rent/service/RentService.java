@@ -5,9 +5,11 @@ import com.readhub.backend.book.repository.BookRepository;
 import com.readhub.backend.book.service.BookService;
 import com.readhub.backend.global.exception.BusinessLogicException;
 import com.readhub.backend.global.exception.ExceptionCode;
+import com.readhub.backend.notification.service.NotificationService;
 import com.readhub.backend.rent.entity.Rent;
 import com.readhub.backend.rent.repository.RentRepository;
 import com.readhub.backend.rentbook.entity.RentBook;
+import com.readhub.backend.reservation.service.ReservationService;
 import com.readhub.backend.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class RentService {
 
     private final RentRepository rentRepository;
     private final BookService bookService;
+    private final ReservationService reservationService;
 
     @Transactional
     public Rent createRent(Rent rent, User user) {
@@ -96,7 +99,7 @@ public class RentService {
 
         rent.setReturnDate(LocalDate.now());
         updateReturnStatus(rent);
-        increaseRentCount(rent);
+        increaseRentCountAndCheckReservation(rent);
 
         return rentRepository.save(rent);
     }
@@ -115,10 +118,16 @@ public class RentService {
         }
     }
 
-    private void increaseRentCount(Rent rent) {
+    private void increaseRentCountAndCheckReservation(Rent rent) {
         for (RentBook rentBook : rent.getRentBookList()) {
             Book book = rentBook.getBook();
-            book.setRentCount(book.getRentCount() + rentBook.getQuantity());
+            int previous = book.getRentCount();
+            int updated = previous + rentBook.getQuantity();
+            book.setRentCount(updated);
+
+            if (previous == 0 && updated > 0) {
+                reservationService.notifyAvailableToRent(book);
+            }
         }
     }
 

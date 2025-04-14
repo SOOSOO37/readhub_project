@@ -3,6 +3,7 @@ package com.readhub.backend.notification.service;
 import com.readhub.backend.global.exception.BusinessLogicException;
 import com.readhub.backend.global.exception.ExceptionCode;
 import com.readhub.backend.notification.entity.Notification;
+import com.readhub.backend.notification.mapper.NotificationMapper;
 import com.readhub.backend.notification.repository.EmitterRepository;
 import com.readhub.backend.notification.repository.NotificationRepository;
 import com.readhub.backend.user.entity.User;
@@ -13,7 +14,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.Map;
 
-import static com.readhub.backend.notification.mapper.NotificationMapper.NOTIFICATION_MAPPER;
 
 @RequiredArgsConstructor
 @Service
@@ -22,15 +22,16 @@ public class NotificationService {
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
     private final EmitterRepository emitterRepository;
     private final NotificationRepository notificationRepository;
+    private final NotificationMapper mapper;
 
     public SseEmitter subscribe(Long userId, String lastEventId) {
-        String emtterId = userId + "_" + System.currentTimeMillis();
-        SseEmitter emitter = emitterRepository.save(emtterId, new SseEmitter(DEFAULT_TIMEOUT));
+        String emitterId = userId + "_" + System.currentTimeMillis();
+        SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(DEFAULT_TIMEOUT));
 
-        emitter.onCompletion(() -> emitterRepository.deleteById(emtterId));
-        emitter.onTimeout(() -> emitterRepository.deleteById(emtterId));
+        emitter.onCompletion(() -> emitterRepository.deleteById(emitterId));
+        emitter.onTimeout(() -> emitterRepository.deleteById(emitterId));
 
-        sendToClient(emitter, emtterId, "EventStream Created. [userId=" + userId + "]");
+        sendToClient(emitter, emitterId, "EventStream Created. [userId=" + userId + "]");
 
         if (!lastEventId.isEmpty()) {
             Map<String, Object> events = emitterRepository.findAllEventCacheStartWithByUserId(String.valueOf(userId));
@@ -61,7 +62,7 @@ public class NotificationService {
         sseEmitters.forEach(
                 (key, emitter) -> {
                     emitterRepository.saveEventCache(key, notification);
-                    sendToClient(emitter, key, NOTIFICATION_MAPPER.NotificationToNotificationResponseDto(notification));
+                    sendToClient(emitter, key, mapper.NotificationToNotificationResponseDto(notification));
                 }
         );
     }
