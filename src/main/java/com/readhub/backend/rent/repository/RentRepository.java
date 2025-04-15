@@ -37,4 +37,7 @@ public interface RentRepository extends JpaRepository<Rent,Long> {
     @Query("SELECT r FROM Rent r WHERE r.createdAt BETWEEN :start AND :end")
     Page<Rent> findByCreatedAtBetween(@Param("start") LocalDateTime start,@Param("end") LocalDateTime end, Pageable pageable);
 
+    @Query("SELECT r FROM Rent r " + "WHERE r.returnDate < :cutoffDate " + "AND r.rentStatus = 'RENT'")
+    List<Rent> findOverdueRentRecords(@Param("cutoffDate") LocalDate cutoffDate);
+
 }
