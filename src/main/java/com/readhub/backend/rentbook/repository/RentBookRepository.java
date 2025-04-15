@@ -10,4 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface RentBookRepository extends JpaRepository<RentBook,Long> {
 
     Page<RentBook> findAll(Pageable pageable);
+
+    @Query("SELECT rb.book, COUNT(rb) as cnt " + "FROM RentBook rb " + "GROUP BY rb.book " + "ORDER BY cnt DESC")
+    Page<Object[]> findMostRentedBooks(Pageable pageable);
 }

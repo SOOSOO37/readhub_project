@@ -56,14 +56,5 @@ public class ReservationController {
     }
 
 
-    @GetMapping
-    public ResponseEntity findAllReservation(@RequestParam int page,
-                                       @RequestParam int size,
-                                       @AuthenticationPrincipal User user){
 
-        Page<Reservation> reservationPage = service.findAllReservations(user,page-1, size);
-        List<Reservation> reservationList = reservationPage.getContent();
-
-        return new ResponseEntity<>(new MultiResponseDto<>(mapper.reservationsToReservationResponseDtos(reservationList),reservationPage), HttpStatus.OK);
-    }
 }
