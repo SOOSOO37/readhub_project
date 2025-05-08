@@ -1,0 +1,40 @@
+package com.readhub.bookservice.book.mapper;
+
+
+import com.readhub.bookservice.book.dto.*;
+import com.readhub.bookservice.book.entity.Book;
+import org.mapstruct.Mapper;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Mapper(componentModel = "spring")
+public interface BookMapper {
+
+    Book bookCreateDtoToBook (BookCreateDto bookCreateDto);
+    Book bookUpdateDtoToBook (BookUpdateDto bookUpdateDto);
+    BookResponseDto bookToBookResponseDto(Book book);
+    BookDetailResponseDto bookToBookDetailResponseDto(Book book);
+    Book bookStatusPatchDtoToBook(BookStatusUpdateDto bookStatusUpdateDto);
+
+    default List<BookResponseDto> booksToBookResponseDtos(List<Book> books){
+        List<BookResponseDto> responses = books.stream()
+                .map(this::bookToBookResponseDto)
+                .collect(Collectors.toList());
+        return responses;
+    }
+
+    default List<BookRecommendDto> booksToRecommendationDtos(List<Book> books) {
+        return books.stream()
+                .map(book -> BookRecommendDto.builder()
+                        .id(book.getId())
+                        .title(book.getTitle())
+                        .writer(book.getWriter())
+                        .category(book.getCategory())
+                        .viewCount(book.getViewCount())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+}
